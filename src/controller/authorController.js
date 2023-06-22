@@ -1,4 +1,4 @@
-
+const jwt = require('jsonwebtoken')
 const authorModel = require('../models/authorModel.js')
 const createAuthor = async function (req, res) {
     try {
@@ -43,4 +43,38 @@ const createAuthor = async function (req, res) {
     }
     catch (err) { return res.status(500).send({ Error: "Server not responding", error: err.message }); }
 }
-module.exports = { createAuthor }
+const loginAuthor = async function (req, res) {
+    try {
+        const emailId = req.body.email
+        const password = req.body.password
+        // console.log(emailId)
+        //console.log(password)
+        if (emailId == undefined || emailId == null || emailId == "") {
+            return res.status(400).send({ message: "email id is required for login" })
+        }
+        if (password == undefined || password == null || password == "") {
+            return res.status(400).send({ message: "password is  required for login" })
+        }
+        const authorData = await authorModel.findOne({
+            email: emailId, password: password
+        })
+        if (!authorData) {
+            return res.status(404).send({ message: " author donot exist" })
+        }
+
+        //console.log(authorData)
+        let token = jwt.sign(
+            {
+                authorId: authorData._id.toString(),
+
+            },
+            "village-binjhol",
+            { expiresIn: "24h" }
+        );
+        res.setHeader("x-api-key", token);
+        return res.status(200).send({ message: "login successful", tokenData: token })
+    }
+    catch (err) { return res.status(500).send({ Error: "Server not responding", error: err.message }); }
+}
+module.exports = { createAuthor, loginAuthor }
+
