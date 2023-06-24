@@ -22,20 +22,51 @@ const createBlog = async function (req, res) {
             return res.status(400).send({ message: "sub-Category  is required" })
         }
         if (mongoose.Types.ObjectId.isValid(req.body.authorId) == false) return res.status(400).send({ staus: false, Error: "Author Id is Invalid" })
-         if(req.body.isDeleted==true){
-            req.body.deletedAt=new Date()
-         }
-         if(req.body.isPublished==true){
-            req.body.publishedAt=new Date()
-         }
-         console.log(req.body)
-         let authorData=await authorModel.findById({_id:req.body.authorId})
-         let blogData=req.body
-         let createdBlogData=await blogModel.create(blogData)
-         if(createdBlogData){
-            return res.status(201).send({message:"blog created successfully",data:createdBlogData})
-         }
+        if (req.body.isDeleted == true) {
+            req.body.deletedAt = new Date()
+        }
+        if (req.body.isPublished == true) {
+            req.body.publishedAt = new Date()
+        }
+        console.log(req.body)
+        let authorData = await authorModel.findById({ _id: req.body.authorId })
+        let blogData = req.body
+        let createdBlogData = await blogModel.create(blogData)
+        if (createdBlogData) {
+            return res.status(201).send({ message: "blog created successfully", data: createdBlogData })
+        }
     }
     catch (err) { return res.status(500).send({ Error: "Server not responding", error: err.message }); }
 }
-module.exports = { createBlog }
+
+const getBlog = async function (req, res) {
+    try {
+
+        console.log(req.query)
+        if (!req.query.category && !req.query.subCategory && !req.query.tags && !req.query.authorId) {
+            let allBlog = await blogModel.find({
+                ispublished: true, isDeleted: false
+            })
+            return res.status(200).send({ message: "succesfully retrived", data: allBlog })
+        }
+        if (mongoose.Types.ObjectId.isValid(req.query.authorId) == false) return res.status(400).send({ staus: false, Error: "Author Id is Invalid" })
+        let filteredBlog = await blogModel.find({
+            $or: [
+                { authorId: req.query.authorId },
+                { category: req.query.category },
+                { subCategory: req.query.subCategory },
+                { tags: req.query.tags },
+            ], isDeleted: false, ispublished: true
+        });
+        if (filteredBlog.length==0) {
+            return res.status(404).send({ message: "not found",status:false })
+        }
+        else {
+            return res.status(200).send({ message:"blogs found successfully",data: filteredBlog,status:true })
+        }
+
+
+    }
+    catch (err) { return res.status(500).send({ Error: "server not responding", error: err.message }); }
+}
+module.exports = { createBlog, getBlog }
