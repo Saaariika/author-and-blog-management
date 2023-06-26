@@ -21,9 +21,9 @@ const authorSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    isdeleted:{
-        type:Boolean,
-        default:false
+    isdeleted: {
+        type: Boolean,
+        default: false
     },
 
 }, {
